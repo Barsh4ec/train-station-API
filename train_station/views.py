@@ -2,6 +2,7 @@ from datetime import datetime
 
 import geopy.distance
 from django.db.models import F, Count
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
@@ -61,6 +62,19 @@ class StationViewSet(ModelViewSet):
 
         return queryset.distinct()
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "name",
+                type=str,
+                description="Filter by station name (ex. ?name=Lvivskyi Prymis'kyi Vokzal)",
+                required=False,
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 def haversine_distance(source: Station, destination: Station):
     coords_1 = (source.latitude, source.longitude)
@@ -117,6 +131,25 @@ class RouteViewSet(ModelViewSet):
 
         return self.serializer_class
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "source",
+                type=str,
+                description="Filter by source station name (ex. ?source=Lvivskyi Prymis'kyi Vokzal)",
+                required=False,
+            ),
+            OpenApiParameter(
+                "destination",
+                type=str,
+                description="Filter by destination station name (ex. ?destination=Kyivskyi Pivdennyi Vokzal)",
+                required=False,
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class CrewViewSet(ModelViewSet):
     queryset = Crew.objects.all()
@@ -162,6 +195,25 @@ class TrainViewSet(ModelViewSet):
 
         return self.serializer_class
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "name",
+                type=str,
+                description="Filter by train name (ex. ?name=Elekrychka)",
+                required=False,
+            ),
+            OpenApiParameter(
+                "train_type",
+                type=str,
+                description="Filter by train_type name (ex. ?train_type=Electric locomotive)",
+                required=False,
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class JourneyViewSet(ModelViewSet):
     queryset = (Journey.objects
@@ -194,8 +246,8 @@ class JourneyViewSet(ModelViewSet):
         source = self.request.query_params.get("source")
         destination = self.request.query_params.get("destination")
         train = self.request.query_params.get("train")
-        departure_time = self.request.query_params.get("departure_time")
-        arrival_time = self.request.query_params.get("arrival_time")
+        departure_date = self.request.query_params.get("departure_date")
+        arrival_date = self.request.query_params.get("arrival_date")
 
         queryset = self.queryset
 
@@ -208,12 +260,12 @@ class JourneyViewSet(ModelViewSet):
         if train:
             queryset = queryset.filter(train__name__icontains=train)
 
-        if departure_time:
-            departure_time = datetime.strptime(departure_time, "%Y-%m-%d").date()
+        if departure_date:
+            departure_time = datetime.strptime(departure_date, "%Y-%m-%d").date()
             queryset = queryset.filter(departure_time__date=departure_time)
 
-        if arrival_time:
-            arrival_time = datetime.strptime(arrival_time, "%Y-%m-%d").date()
+        if arrival_date:
+            arrival_time = datetime.strptime(arrival_date, "%Y-%m-%d").date()
             queryset = queryset.filter(arrival_time__date=arrival_time)
 
         return queryset.distinct()
@@ -226,6 +278,43 @@ class JourneyViewSet(ModelViewSet):
             return JourneyDetailSerializer
 
         return self.serializer_class
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "source",
+                type=str,
+                description="Filter by source station name (ex. ?source=Lvivskyi Prymis'kyi Vokzal)",
+                required=False,
+            ),
+            OpenApiParameter(
+                "destination",
+                type=str,
+                description="Filter by destination station name (ex. ?destination=Kyivskyi Pivdennyi Vokzal)",
+                required=False,
+            ),
+            OpenApiParameter(
+                "train",
+                type=str,
+                description="Filter by train name (ex. ?train=Elekrychka)",
+                required=False,
+            ),
+            OpenApiParameter(
+                "departure_date",
+                type=datetime,
+                description="Filter by departure date (ex. ?date=2023-10-22)",
+                required=False,
+            ),
+            OpenApiParameter(
+                "arrival_date",
+                type=datetime,
+                description="Filter by arrival date (ex. ?date=2023-10-22)",
+                required=False,
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class OrderViewSet(ModelViewSet):
@@ -255,3 +344,16 @@ class OrderViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "creation_date",
+                type=datetime,
+                description="Filter by date of creation order (ex. ?date=2023-10-22)",
+                required=False,
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
