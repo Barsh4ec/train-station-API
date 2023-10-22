@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 
 from train_station.models import (
     Station, Route, Crew, TrainType, Train, Journey, Ticket, Order
@@ -14,9 +15,16 @@ class StationSerializer(serializers.ModelSerializer):
 
 
 class RouteSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Route
         fields = ("id", "source", "destination")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Route.objects.select_related("station"),
+                fields=["source", "destination"]
+            )
+        ]
 
 
 class RouteListSerializer(serializers.ModelSerializer):
