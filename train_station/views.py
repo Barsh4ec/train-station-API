@@ -4,7 +4,7 @@ import geopy.distance
 from django.db.models import F, Count
 from rest_framework import mixins
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from train_station.models import Station, Route, Crew, TrainType, Train, Journey, Order
 from train_station.serializers import (
@@ -20,11 +20,7 @@ class DefaultPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class StationViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
+class StationViewSet(ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
     pagination_class = DefaultPagination
@@ -48,12 +44,7 @@ def haversine_distance(source: Station, destination: Station):
     return round(geopy.distance.geodesic(coords_1, coords_2).km, 1)
 
 
-class RouteViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    GenericViewSet,
-):
+class RouteViewSet(ModelViewSet):
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     pagination_class = DefaultPagination
@@ -89,32 +80,19 @@ class RouteViewSet(
         return self.serializer_class
 
 
-class CrewViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
+class CrewViewSet(ModelViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     pagination_class = DefaultPagination
 
 
-class TrainTypeViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet,
-):
+class TrainTypeViewSet(ModelViewSet):
     queryset = TrainType.objects.all()
     serializer_class = TrainTypeSerializer
     pagination_class = DefaultPagination
 
 
-class TrainViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    GenericViewSet,
-):
+class TrainViewSet(ModelViewSet):
     queryset = Train.objects.select_related("train_type")
     serializer_class = TrainSerializer
     pagination_class = DefaultPagination
@@ -144,12 +122,7 @@ class TrainViewSet(
         return self.serializer_class
 
 
-class JourneyViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    GenericViewSet,
-):
+class JourneyViewSet(ModelViewSet):
     queryset = (Journey.objects
                 .select_related("train", "route")
                 .prefetch_related("crew")
@@ -201,11 +174,7 @@ class JourneyViewSet(
         return self.serializer_class
 
 
-class OrderViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    GenericViewSet,
-):
+class OrderViewSet(ModelViewSet):
     queryset = Order.objects.prefetch_related(
         "tickets__journey__route", "tickets__journey__train"
     )
