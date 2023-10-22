@@ -3,10 +3,11 @@ from datetime import datetime
 import geopy.distance
 from django.db.models import F, Count
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 
 from train_station.models import Station, Route, Crew, TrainType, Train, Journey, Order
-from train_station.permissions import IsAdminOrIfAuthenticatedReadOnly
+from train_station.permissions import IsAdminOrIfAuthenticatedReadOnly, IsAnonymous
 from train_station.serializers import (
     StationSerializer,
     RouteSerializer,
@@ -37,6 +38,18 @@ class StationViewSet(ModelViewSet):
     pagination_class = DefaultPagination
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
+    def get_permissions(self):
+        if self.request.user.is_anonymous:
+            self.permission_classes = [
+                IsAnonymous,
+            ]
+        else:
+            self.permission_classes = [
+                IsAdminOrIfAuthenticatedReadOnly,
+            ]
+
+        return super(StationViewSet, self).get_permissions()
+
     def get_queryset(self):
         """Retrieve the stations by their name"""
         name = self.request.query_params.get("name")
@@ -61,6 +74,18 @@ class RouteViewSet(ModelViewSet):
     serializer_class = RouteSerializer
     pagination_class = DefaultPagination
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def get_permissions(self):
+        if self.request.user.is_anonymous:
+            self.permission_classes = [
+                IsAnonymous,
+            ]
+        else:
+            self.permission_classes = [
+                IsAdminOrIfAuthenticatedReadOnly,
+            ]
+
+        return super(RouteViewSet, self).get_permissions()
 
     def get_queryset(self):
         """Retrieve the Routes with filters"""
@@ -97,21 +122,21 @@ class CrewViewSet(ModelViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     pagination_class = DefaultPagination
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAdminUser,)
 
 
 class TrainTypeViewSet(ModelViewSet):
     queryset = TrainType.objects.all()
     serializer_class = TrainTypeSerializer
     pagination_class = DefaultPagination
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAdminUser,)
 
 
 class TrainViewSet(ModelViewSet):
     queryset = Train.objects.select_related("train_type")
     serializer_class = TrainSerializer
     pagination_class = DefaultPagination
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         """Retrieve the trains with filters"""
@@ -151,6 +176,18 @@ class JourneyViewSet(ModelViewSet):
     serializer_class = JourneySerializer
     pagination_class = DefaultPagination
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def get_permissions(self):
+        if self.request.user.is_anonymous:
+            self.permission_classes = [
+                IsAnonymous,
+            ]
+        else:
+            self.permission_classes = [
+                IsAdminOrIfAuthenticatedReadOnly,
+            ]
+
+        return super(JourneyViewSet, self).get_permissions()
 
     def get_queryset(self):
         """Retrieve the journeys with filters"""
@@ -197,18 +234,18 @@ class OrderViewSet(ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = DefaultPagination
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         creation_date = self.request.query_params.get("creation_date")
-
-        queryset = Order.objects.filter(user=self.request.user)
+        if not self.request.user.is_staff:
+            self.queryset = self.queryset.filter(user=self.request.user)
 
         if creation_date:
             creation_date = datetime.strptime(creation_date, "%Y-%m-%d").date()
-            queryset = queryset.filter(created_at__date=creation_date)
+            self.queryset = self.queryset.filter(created_at__date=creation_date)
 
-        return queryset
+        return self.queryset
 
     def get_serializer_class(self):
         if self.action == "list":
