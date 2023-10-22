@@ -1,11 +1,13 @@
 import geopy.distance
+from django.db.models import F, Count
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 
-from train_station.models import Station, Route, Crew, TrainType, Train
+from train_station.models import Station, Route, Crew, TrainType, Train, Journey, Order
 from train_station.serializers import (
     StationSerializer, RouteSerializer, RouteListSerializer, RouteDetailSerializer, CrewSerializer, TrainTypeSerializer,
-    TrainSerializer, TrainListSerializer, TrainDetailSerializer
+    TrainSerializer, TrainListSerializer, TrainDetailSerializer, JourneySerializer, JourneyListSerializer,
+    JourneyDetailSerializer, OrderSerializer, OrderListSerializer
 )
 
 
@@ -85,3 +87,51 @@ class TrainViewSet(
             return TrainDetailSerializer
 
         return self.serializer_class
+
+
+class JourneyViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    GenericViewSet,
+):
+    queryset = (Journey.objects
+                .select_related("train", "route")
+                .prefetch_related("crew")
+                .annotate(
+                    tickets_available=(
+                        F("train__cargo_num") * F("train__places_in_cargo")
+                        - Count("tickets")
+                    )
+                )
+    )
+    serializer_class = JourneySerializer
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return JourneyListSerializer
+
+        if self.action == "retrieve":
+            return JourneyDetailSerializer
+
+        return self.serializer_class
+
+
+class OrderViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    GenericViewSet,
+):
+    queryset = Order.objects.prefetch_related(
+        "tickets__journey__route", "tickets__journey__train"
+    )
+    serializer_class = OrderSerializer
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return OrderListSerializer
+
+        return OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
