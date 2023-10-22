@@ -3,6 +3,7 @@ from datetime import datetime
 import geopy.distance
 from django.db.models import F, Count
 from rest_framework import mixins
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import GenericViewSet
 
 from train_station.models import Station, Route, Crew, TrainType, Train, Journey, Order
@@ -13,6 +14,12 @@ from train_station.serializers import (
 )
 
 
+class DefaultPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class StationViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -20,6 +27,7 @@ class StationViewSet(
 ):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         """Retrieve the stations by their name"""
@@ -48,6 +56,7 @@ class RouteViewSet(
 ):
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         """Retrieve the Routes with filters"""
@@ -87,6 +96,7 @@ class CrewViewSet(
 ):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
+    pagination_class = DefaultPagination
 
 
 class TrainTypeViewSet(
@@ -96,6 +106,7 @@ class TrainTypeViewSet(
 ):
     queryset = TrainType.objects.all()
     serializer_class = TrainTypeSerializer
+    pagination_class = DefaultPagination
 
 
 class TrainViewSet(
@@ -106,6 +117,7 @@ class TrainViewSet(
 ):
     queryset = Train.objects.select_related("train_type")
     serializer_class = TrainSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         """Retrieve the trains with filters"""
@@ -148,6 +160,7 @@ class JourneyViewSet(
                     )
                 ))
     serializer_class = JourneySerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         """Retrieve the journeys with filters"""
@@ -197,6 +210,7 @@ class OrderViewSet(
         "tickets__journey__route", "tickets__journey__train"
     )
     serializer_class = OrderSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         creation_date = self.request.query_params.get("creation_date")
