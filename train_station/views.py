@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import geopy.distance
 from django.db.models import F, Count
 from rest_framework import mixins
@@ -19,6 +21,17 @@ class StationViewSet(
     queryset = Station.objects.all()
     serializer_class = StationSerializer
 
+    def get_queryset(self):
+        """Retrieve the stations by their name"""
+        name = self.request.query_params.get("name")
+
+        queryset = self.queryset
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
+        return queryset.distinct()
+
 
 def haversine_distance(source: Station, destination: Station):
     coords_1 = (source.latitude, source.longitude)
@@ -35,6 +48,21 @@ class RouteViewSet(
 ):
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
+
+    def get_queryset(self):
+        """Retrieve the Routes with filters"""
+        source = self.request.query_params.get("source")
+        destination = self.request.query_params.get("destination")
+
+        queryset = self.queryset
+
+        if source:
+            queryset = queryset.filter(source__name__icontains=source)
+
+        if destination:
+            queryset = queryset.filter(destination__name__icontains=destination)
+
+        return queryset.distinct()
 
     def perform_create(self, serializer):
         source = Station.objects.get(id=self.request.data["source"])
@@ -79,6 +107,21 @@ class TrainViewSet(
     queryset = Train.objects.select_related("train_type")
     serializer_class = TrainSerializer
 
+    def get_queryset(self):
+        """Retrieve the trains with filters"""
+        name = self.request.query_params.get("name")
+        train_type = self.request.query_params.get("train_type")
+
+        queryset = self.queryset
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
+        if train_type:
+            queryset = queryset.filter(train_type__name__icontains=train_type)
+
+        return queryset.distinct()
+
     def get_serializer_class(self):
         if self.action == "list":
             return TrainListSerializer
@@ -100,12 +143,40 @@ class JourneyViewSet(
                 .prefetch_related("crew")
                 .annotate(
                     tickets_available=(
-                        F("train__cargo_num") * F("train__places_in_cargo")
-                        - Count("tickets")
+                            F("train__cargo_num") * F("train__places_in_cargo")
+                            - Count("tickets")
                     )
-                )
-    )
+                ))
     serializer_class = JourneySerializer
+
+    def get_queryset(self):
+        """Retrieve the journeys with filters"""
+        source = self.request.query_params.get("source")
+        destination = self.request.query_params.get("destination")
+        train = self.request.query_params.get("train")
+        departure_time = self.request.query_params.get("departure_time")
+        arrival_time = self.request.query_params.get("arrival_time")
+
+        queryset = self.queryset
+
+        if source:
+            queryset = queryset.filter(route__source__name__icontains=source)
+
+        if destination:
+            queryset = queryset.filter(route__destination__name__icontains=destination)
+
+        if train:
+            queryset = queryset.filter(train__name__icontains=train)
+
+        if departure_time:
+            departure_time = datetime.strptime(departure_time, "%Y-%m-%d").date()
+            queryset = queryset.filter(departure_time__date=departure_time)
+
+        if arrival_time:
+            arrival_time = datetime.strptime(arrival_time, "%Y-%m-%d").date()
+            queryset = queryset.filter(arrival_time__date=arrival_time)
+
+        return queryset.distinct()
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -126,6 +197,17 @@ class OrderViewSet(
         "tickets__journey__route", "tickets__journey__train"
     )
     serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        creation_date = self.request.query_params.get("creation_date")
+
+        queryset = Order.objects.filter(user=self.request.user)
+
+        if creation_date:
+            creation_date = datetime.strptime(creation_date, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__date=creation_date)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
