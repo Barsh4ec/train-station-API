@@ -2,15 +2,26 @@ from datetime import datetime
 
 import geopy.distance
 from django.db.models import F, Count
-from rest_framework import mixins
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from train_station.models import Station, Route, Crew, TrainType, Train, Journey, Order
+from train_station.permissions import IsAdminOrIfAuthenticatedReadOnly
 from train_station.serializers import (
-    StationSerializer, RouteSerializer, RouteListSerializer, RouteDetailSerializer, CrewSerializer, TrainTypeSerializer,
-    TrainSerializer, TrainListSerializer, TrainDetailSerializer, JourneySerializer, JourneyListSerializer,
-    JourneyDetailSerializer, OrderSerializer, OrderListSerializer
+    StationSerializer,
+    RouteSerializer,
+    RouteListSerializer,
+    RouteDetailSerializer,
+    CrewSerializer,
+    TrainTypeSerializer,
+    TrainSerializer,
+    TrainListSerializer,
+    TrainDetailSerializer,
+    JourneySerializer,
+    JourneyListSerializer,
+    JourneyDetailSerializer,
+    OrderSerializer,
+    OrderListSerializer
 )
 
 
@@ -24,6 +35,7 @@ class StationViewSet(ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         """Retrieve the stations by their name"""
@@ -48,6 +60,7 @@ class RouteViewSet(ModelViewSet):
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         """Retrieve the Routes with filters"""
@@ -84,18 +97,21 @@ class CrewViewSet(ModelViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class TrainTypeViewSet(ModelViewSet):
     queryset = TrainType.objects.all()
     serializer_class = TrainTypeSerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class TrainViewSet(ModelViewSet):
     queryset = Train.objects.select_related("train_type")
     serializer_class = TrainSerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         """Retrieve the trains with filters"""
@@ -134,6 +150,7 @@ class JourneyViewSet(ModelViewSet):
                 ))
     serializer_class = JourneySerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         """Retrieve the journeys with filters"""
@@ -180,6 +197,7 @@ class OrderViewSet(ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = DefaultPagination
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         creation_date = self.request.query_params.get("creation_date")
