@@ -10,7 +10,7 @@ ALLOWED_URLS = (STATIONS_URL, ROUTES_URL, JOURNEYS_URL)
 FORBIDDEN_URLS = (WORKERS_URL, TRAIN_TYPES_URL, TRAINS_URL, ORDERS_URL)
 
 
-class UnauthenticatedMovieApiTests(TestCase):
+class UnauthenticatedTrainStationApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
