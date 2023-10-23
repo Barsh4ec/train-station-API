@@ -49,6 +49,7 @@ password: qwerty
   - /api/schema/
   - /api/doc/swagger/ 
   - /api/doc/redoc/
+- Automatically calculate distance between stations using latitude and longitude
 - Managing orders and tickets
 - Access for anonymous users
 - Filtering data by different parameters
