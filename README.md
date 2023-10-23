@@ -5,11 +5,9 @@ The Train Station API is a powerful and versatile application designed to provid
 ## Installation
 
 Python3 must be already installed.
-Also install PostgreSQL and create db.
 
 ```shell
-git clone https://github.com/innyshka/airport-API.git
-cd airport_api
+git clone https://github.com/Barsh4ec/train-station-API.git
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
