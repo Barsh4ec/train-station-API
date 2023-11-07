@@ -1,13 +1,19 @@
+import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = "django-insecure-_ne8frdno9%+&zk%nweg-+1y90f7$95tjvo0_2*l1=-#p@r^tf"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", default="default_key")
 
 
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", default=False)
 
 ALLOWED_HOSTS = []
 
@@ -81,8 +87,11 @@ WSGI_APPLICATION = "train_service.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": os.environ["POSTGRES_HOST"],
+        "NAME": os.environ["POSTGRES_DB"],
+        "USER": os.environ["POSTGRES_USER"],
+        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
     }
 }
 

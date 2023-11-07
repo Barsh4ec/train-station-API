@@ -9,7 +9,7 @@ Python3 must be already installed.
 ```shell
 git clone https://github.com/Barsh4ec/train-station-API.git
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows, use venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
