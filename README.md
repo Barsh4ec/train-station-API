@@ -1,8 +1,10 @@
 # Train Station API🚈
+___
 
 The Train Station API is a powerful and versatile application designed to provide developers, businesses, and transportation enthusiasts with easy access to information related to train stations, schedules, and services. Whether you're building a travel app, a website, or a logistics management system, our Train Station API is the perfect solution to incorporate railway data seamlessly into your projects.
 
 ## Installation
+___
 
 Python3 must be already installed.
 
@@ -15,7 +17,19 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+## Run with Docker
+___
+
+To run the project using Docker, follow these steps:
+
+- Create a .env file using .env.sample and specify environment variables inside the .env to run the project with Docker.
+- Run the following command to build and start the Docker containers:
+```shell
+docker-compose up --build
+```
+
 ## Features based on user role
+___
 Anonymous User:
 
 * Can see Stations, Routes and Journeys
@@ -30,6 +44,7 @@ Admin User:
 
 * Has full access to all kind of operations
 
+
 #### Admin user credentials
 ```shell
 email: admin@gmail.com
@@ -41,6 +56,7 @@ password: qwerty
 
 
 ## Features
+___
 - Interaction with JWT Token is available with these endpoints:
   - /api/user/token/ - for obtaining user's token
   - /api/user/token/refresh/ - for refreshing token after it's lifetime expire
@@ -57,4 +73,5 @@ password: qwerty
 
 
 ## DB structure
+___
 ![image](demo/DB_Structure.png)
